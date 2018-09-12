@@ -2,17 +2,17 @@ function [ G ] = create_gramian( gens, Phi )
 %% create_gramian creates an approximate Gramian matrix
 %
 % Creates an approximation to the Gramian matrix needed to approximate a
-% function over the unit hypercube. Given a set of n generators in R^d, we
-% construct an approximate Gramian matrix G that can be used to create the 
-% best approximation to a function in the space of polynomials of a given
-% order. The basis functions will be defined by a multi-index set A_{ij},
-% such that \ell_i(x) = PROD( \phi_(A_{ij})(x_j) ). The multi-index set has
-% cardinality m, i.e. it defines m basis functions. The function 
+% function over the hypercube [-1,1]^d. Given a set of n generators in R^d, 
+% we % construct an approximate Gramian matrix G that can be used to create 
+% the best approximation to a function in the space of polynomials of a 
+% given order. The basis functions will be defined by a multi-index set 
+% A_{ij}, such that \ell_i(x) = PROD( \phi_(A_{ij})(x_j) ). The multi-index 
+% set has cardinality m, i.e. it defines m basis functions. The function 
 % \phi_k(x_j) is a one-dimensional polynomial of degree k. 
 %
 % PARAMETERS:
 % INPUTS:
-% gens, REAL (n,2), the generators used to construct the matrix
+% gens, REAL (n,d), the generators used to construct the matrix
 % Phi, struct containing the following information:
 %   - index set, INTEGER (m,d), the index set needed to construct the basis
 %   - basis_card, INTEGER, the cardinality of the index set (i.e. m)
