@@ -1,6 +1,5 @@
 function [generators1, mass] = cvt_step_lloyds_2d(generators0, f)
 
-addpath('triangle_dunavant_rule');
 tol = 1e-12;
 [n,~] = size(generators0);
 generators1 = zeros(size(generators0));
