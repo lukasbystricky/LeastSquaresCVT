@@ -47,6 +47,7 @@ weights = zeros(num_sample, 1);
 switch sample_type
     case 'sequential'
         
+        % TO FIX, THIS FUNCTION IS FAR TOO SLOW
         sample = sequential_sampling_uniform(num_sample,Phi);
         
         for i = 1 : num_sample
@@ -54,6 +55,8 @@ switch sample_type
         end
         
     case 'cvt'
+        
+        % TO IMPLEMENT
         
     case 'uniform'
         
