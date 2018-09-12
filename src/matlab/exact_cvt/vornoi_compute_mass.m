@@ -5,7 +5,7 @@ function [mass, center_of_mass, energy] = vornoi_compute_mass(generators, rho)
 % as the total energy associated with the generators. The mass of region I
 % is \int_I \rho(x,y) dx dy. The center of mass  is 
 % \int_I x_i \rho(x,y) dx dy / \int_I \rho(x,y) dx dy. The total energy is
-% \sum_I (\int_I \rho(x,y) || (x,y) - *cx_I, cy_I|| dx dy). These integrals
+% \sum_I (\int_I \rho(x,y) || (x,y) - *cx_I, cy_I||^2 dx dy). These integrals
 % are computed using the Dunavant quadrature rules that can integrate all
 % polynomials up to total degree 20 exactly.
 %
@@ -17,8 +17,8 @@ function [mass, center_of_mass, energy] = vornoi_compute_mass(generators, rho)
 %
 % OUTPUT:
 % mass, REAL (n), the masses of each Voronoi region
-% center_of_mass (n,2), the center of mass of each Voronoi region
-% energy, the total energy
+% center_of_mass, REAL (n,2), the center of mass of each Voronoi region
+% energy, REAL, the total energy
 
 tol = 1e-12;
 [n,~] = size(generators);
