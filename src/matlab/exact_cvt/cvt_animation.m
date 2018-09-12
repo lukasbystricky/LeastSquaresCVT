@@ -1,11 +1,11 @@
-function cvt_animation(generators, masses)
+function cvt_animation(generators, masses, fname)
 
 n_iter = size(generators,3);
 n_generators = size(generators,1);
 
 h = figure();
 
-for i = 2:n_iter
+for i = 1:n_iter
     clf
     voronoi(generators(:,1,i), generators(:,2,i));
     hold on
@@ -27,8 +27,10 @@ for i = 2:n_iter
             color = 'g';
         end
         
-        rectangle('Position', [xsg, ysg, 2*rg, 2*rg], 'Curvature', [1,1], 'FaceColor', color);
-        rectangle('Position', [xs, ys, 2*r, 2*r], 'Curvature', [1,1], 'EdgeColor', 'r');
+        rectangle('Position', [xsg, ysg, 2*rg, 2*rg], 'Curvature', [1,1],...
+                            'FaceColor', color);
+        rectangle('Position', [xs, ys, 2*r, 2*r], 'Curvature', [1,1],...
+                            'EdgeColor', 'r');
     end
     
     title(['iteration ', num2str(i)]);
@@ -44,8 +46,10 @@ for i = 2:n_iter
     [imind,cm] = rgb2ind(im,256);
     % Write to the GIF File
     if i == 2
-        imwrite(imind,cm,'cvt_animation.gif','gif', 'Loopcount',inf, 'DelayTime', 0);
+        imwrite(imind,cm, [fname, '.gif'] ,'gif', 'Loopcount',inf, ...
+                        'DelayTime', 0);
     else
-        imwrite(imind,cm,'cvt_animation.gif','gif','WriteMode','append', 'DelayTime', 0);
+        imwrite(imind,cm, [fname, '.gif'],'gif', 'WriteMode','append', ...
+                        'DelayTime', 0);
     end
 end
