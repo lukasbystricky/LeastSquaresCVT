@@ -1,4 +1,5 @@
-function [center_of_mass, mass, modified_mass] = integrate_triangle(v1, v2, v3, f, rule)
+function [center_of_mass, mass, modified_mass, energy] = ...
+                    integrate_triangle(v1, v2, v3, f, rule)
 
 % generate rule on reference triangle
 order_num = dunavant_order_num ( rule );
@@ -12,6 +13,7 @@ area = triangle_area ( [v1; v2; v3]' );
 center_of_mass = [0,0];
 modified_mass = 0;
 mass = 0;
+energy = 0;
 
 for order = 1 : order_num
     
@@ -22,6 +24,8 @@ for order = 1 : order_num
     center_of_mass(2) = center_of_mass(2) + w(order) * f(x,y).^2 * y;
     modified_mass = modified_mass + w(order) * f(x,y).^2;
     mass = mass + w(order) * f(x,y);
+    energy = energy + w(order) * f(x,y).^2 * norm([x, y] - v1); %v1 is 
+                                % always the center of the Voronoi region
     
 end
 
