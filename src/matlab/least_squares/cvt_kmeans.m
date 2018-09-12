@@ -1,5 +1,5 @@
 function [generators,energy, masses] = cvt_kmeans(generators0, Phi, ...
-                    num_sample, sample_type, iterations)
+                    num_sample, sample_type, iterations, adaptive)
 %% cvt_kmeans constructs an approximate CVT of the Christoffel function 
 %
 % Creates an approximation of to a CVT of the Christoffel funtion on the
@@ -25,6 +25,9 @@ function [generators,energy, masses] = cvt_kmeans(generators0, Phi, ...
 %  rejection sampling and is quite slow in higher dimensions
 %  - 'uniform', draw the points from the uniform distribution on [-1,1]^d
 % iterations, INTEGER, number of k-means iterations
+% adaptive, BOOLEAN, if TRUE compute the change in energy each iteration,
+%   if it is below a certain tolerance, double the number of sample points
+%   for the next iteration
 %
 % OUTPUT:
 % generators, REAL (n,d,iterations), the k-means generators at each
@@ -81,13 +84,16 @@ for iter = 1 : iterations
     
     for i = 1 : num_sample
        [~, ind] = min( sum((generators(:, :, iter)...
-                        - repmat(sample(i,:),n,1)).^2, 2) );
-       bins(ind,:) = bins(ind,:) + sample(i,:) * weights(i);
+                        - repmat(sample(i, :), n, 1)).^2, 2) );
+       bins(ind,:) = bins(ind,:) + sample(i, :) * weights(i);
        bin_count(ind) = bin_count(ind) + weights(i);
        
-       masses(ind, iter) = masses(ind, iter) + Pweight(sample(i,:));
+       masses(ind, iter) = masses(ind, iter) + Pweight(sample(i, :)) ...
+                         / num_sample;
+                     
        energy(iter) = energy(iter) + weights(i) ...
-                        * norm(generators(ind, :, iter) - sample(i, :));
+                        * norm(generators(ind, :, iter) - sample(i, :)) ...
+                        / num_sample;
     end
     
     for j = 1 : n
@@ -95,7 +101,46 @@ for iter = 1 : iterations
            generators(j,:,iter + 1) = bins(j,:) ./ bin_count(j);
        end
     end
+    
+    % if energy change is small, double number of sample points
+    if adaptive && iter > 5 ...
+            && abs((energy(iter) - energy(iter - 1))/energy(iter)) < 1e-6
+        
+        disp(['Doubling sample points to ', num2str(2* num_sample)]);
+        
+        sample = [sample; zeros(num_sample, d)];
+        weights = [weights; zeros(num_sample, 1)];
+        
+        switch sample_type
+            case 'sequential'
+                
+                % TO FIX, THIS FUNCTION IS FAR TOO SLOW
+                sample(num_sample + 1 : end) ...
+                            = sequential_sampling_uniform(num_sample,Phi);
+                
+                for i = num_sample + 1 : 2 * num_sample
+                    weights(i) = ( Pweight(sample(i,:)) ...
+                                / (2^d)).^(cvt_scale - 1);
+                end
+                
+            case 'cvt'
+                
+                % TO IMPLEMENT
+                
+            case 'uniform'
+                
+                for k = 1 : d
+                    sample(num_sample + 1 : end, k) = 2 * ...
+                                rand(num_sample, 1) - 1;
+                end
+                
+                for i = num_sample + 1 : 2 * num_sample
+                    weights(i) = Pweight(sample(i,:)).^cvt_scale;
+                end
+        end
+        
+        num_sample = 2* num_sample;
+        
+        
+    end
 end
-
-energy = energy / num_sample;
-masses = masses / num_sample;
