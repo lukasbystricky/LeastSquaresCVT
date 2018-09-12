@@ -1,4 +1,20 @@
 function cvt_animation(generators, masses, fname)
+%% cvt_animation saves an animated gif showing the evolution of a CVT
+%
+% Creates and saves an animated gif where each frame is a single iteration
+% of a two dimensional CVT on the domain [-1,1]^2. The Voronoi diagram is 
+% drawn and then each centroid is marked with a circle that represents the
+% mass of the corresponding Voronoi region.
+%
+% PARAMETERS:
+% INPUTS:
+% generators, REAL (n,2,n_iter), the generators at each iteration
+% masses, REAL (n, n_iter), the masses of each Voroni region at each
+%   iteration
+% fname, STRING, the file name (without extension)
+%
+% OUTPUT:
+% None, the animated gif is saved under the name 'fname.gif'
 
 n_iter = size(generators,3);
 n_generators = size(generators,1);
