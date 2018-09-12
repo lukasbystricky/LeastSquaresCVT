@@ -1,4 +1,22 @@
-function [mass, center_of_mass, energy] = vornoi_compute_mass(generators, f)
+function [mass, center_of_mass, energy] = vornoi_compute_mass(generators, rho)
+%% voronoi_compute_mass computes the masses and centers of each Voronoi region
+%
+% Computes the masses and centers of masses of each Voronoi region, as well
+% as the total energy associated with the generators. The mass of region I
+% is \int_I \rho(x,y) dx dy. The center of mass  is 
+% \int_I x_i \rho(x,y) dx dy / \int_I \rho(x,y) dx dy. The total energy is
+% \sum_I (\int_I \rho(x,y) || (x,y) - *cx_I, cy_I|| dx dy).
+%
+% PARAMETERS:
+% INPUTS:
+% generators, REAL (n,2), the Voronoi generators, i.e. the centroids of
+%   each region
+% rho, FUNCTION (x,y), the density function used to compute the mass
+%
+% OUTPUT:
+% mass, REAL (n), the masses of each Voronoi region
+% center_of_mass (n,2), the center of mass of each Voronoi region
+% energy, the total energy
 
 tol = 1e-12;
 [n,~] = size(generators);
@@ -97,7 +115,7 @@ for g = 1:n
         v3 = [triangles(t,3,1),triangles(t,3,2)];
         
         [center_of_mass_tri, mass_tri, mass_modified_tri, energy_tri] = ...
-                        integrate_triangle(v1, v2, v3, f, rule);
+                        integrate_triangle(v1, v2, v3, rho, rule);
         
         center_of_mass(g,:) = center_of_mass(g,:) + center_of_mass_tri;
         mass_modified = mass_modified + mass_modified_tri;
