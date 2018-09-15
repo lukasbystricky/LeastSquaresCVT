@@ -10,14 +10,14 @@ Pweight = @(x) sum(Phi.value(x).^2, 2) / m;
 
 scale = (d+2.0)/(d*1.0);
 
-sample = sequential_sampling_uniform(num_sample,Phi);
+sample = rejection_sampling_uniform(num_sample,Phi);
 weights = zeros(num_sample, 1);
 
 for i=1:num_sample
     weights(i) = ( Pweight(sample(i,:))/(2^d)).^(scale - 1);
 end
     
-for i=1:25
+for k=1:25
     energy = 0; 
     bins = zeros(n, d);
     bin_count = zeros(n, 1);
@@ -43,7 +43,7 @@ for i=1:25
     end
     
     prevWeights = prevWeights + bin_count;
-
+    prevGens = gens;
 end
 
 end
