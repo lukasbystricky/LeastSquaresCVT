@@ -35,7 +35,7 @@ xy2 = reference_to_physical_t3 ( [v1;v2;v3]', order_num, xy );
 area = triangle_area ( [v1; v2; v3]' );
 
 % perform quadrature
-f_quad = rho(xy2(1,:), xy2(2,:));
+f_quad = rho([xy2(1,:); xy2(2,:)]')';
 
 center_of_mass(1) = sum(w .* f_quad.^2 .* xy2(1,:));
 center_of_mass(2) = sum(w .* f_quad.^2 .* xy2(2,:));
