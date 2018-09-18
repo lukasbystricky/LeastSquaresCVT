@@ -78,22 +78,32 @@ masses = zeros(n, iterations);
 
 for iter = 1 : iterations
     disp( ['iteration ',num2str(iter)] )
-    energy(iter) = 0; 
+    
     bins = zeros(n, d);
     bin_count = zeros(n, 1);
     
+    if d == 2
+        [~, ~, energy(iter)]  =  vornoi_compute_mass(generators(:,:,iter), ...
+            @(x) (sum(Phi.value(x).^2, 2) / m / (2^d)));
+    else
+        energy(iter) = 0;
+    end
+    
+    
     for i = 1 : num_sample
-       [~, ind] = min( sum((generators(:, :, iter)...
-                        - repmat(sample(i, :), n, 1)).^2, 2) );
-       bins(ind,:) = bins(ind,:) + sample(i, :) * weights(i);
-       bin_count(ind) = bin_count(ind) + weights(i);
-       
-       masses(ind, iter) = masses(ind, iter) + Pweight(sample(i, :)) ...
-                         / num_sample;
-                     
-       energy(iter) = energy(iter) + weights(i) ...
-                        * norm(generators(ind, :, iter) - sample(i, :)) ...
-                        / num_sample;
+        [~, ind] = min( sum((generators(:, :, iter)...
+            - repmat(sample(i, :), n, 1)).^2, 2) );
+        bins(ind,:) = bins(ind,:) + sample(i, :) * weights(i);
+        bin_count(ind) = bin_count(ind) + weights(i);
+        
+        masses(ind, iter) = masses(ind, iter) + Pweight(sample(i, :)) ...
+            / num_sample;
+        
+        if d ~= 2
+            energy(iter) = energy(iter) + weights(i) ...
+                * norm(generators(ind, :, iter) - sample(i, :)) ...
+                / num_sample;
+        end
     end
     
     for j = 1 : n
