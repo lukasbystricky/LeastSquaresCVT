@@ -1,19 +1,12 @@
-function in = total_degree_set(n)
+function in = total_degree_set(n, d)
 
-in_tmp = zeros((n+1)^2,2);
-degrees = 0:n;
+in = zeros(1, d);
 
-for i = 1:n+1
-    in_tmp((i-1)*(n+1) + 1: i*(n+1),1) = degrees(i);
-    for j = 1:n+1
-        in_tmp((i-1)*(n+1) + j ,2) = degrees(j);
+for i = 1 : n
+    in(end + 1, :) = [zeros(1, d - 1), i];
+    
+    while norm(in(end, :) - [i, zeros(1, d - 1)]) > 0
+        in(end + 1, :) = mono_total_next_grlex(d, i, in(end,:));
     end
-end
-
-in = [];
-for i = 1:(n+1)^2
-   if  sum(in_tmp(i,:)) <= n
-       in(end+1,:) = in_tmp(i,:);
-   end
 end
 
