@@ -87,22 +87,22 @@ for iter = 1 : iterations
         energy(iter) = 0;
     end
 
-    [k, dist] = dsearchn(generators(:,:,iter), sample);
+   [k, dist] = dsearchn(generators(:,:,iter), sample);
     bins = zeros(n_generators, d);
     bin_count = zeros(n_generators, 1);
     
     for i = 1 : n_generators
-        bins(i,:) = sum(bsxfun(@times, sample(find(k == i),:), weights(find(k==i))),1);
-        bin_count(i) = sum(weights(find(k==i)));
+        bins(i,:) = sum(bsxfun(@times, sample(k == i,:), weights(k == i)),1);
+        bin_count(i) = sum(weights(k == i));
         
-        masses(i, iter) = sum(Pweight(sample(find(k == i),:)))/ num_sample;
+        masses(i, iter) = sum(Pweight(sample(k == i,:)))/ num_sample;
         
         if d ~= 2
-            energy(iter) = energy(iter) + sum(weights(find(k == i)) .* ...
-                dist(find(k == i)).^2) / num_sample;
+            energy(iter) = energy(iter) + sum(weights(k == i) .* ...
+                dist(k == i).^2) / num_sample;
         end
     end
-%   
+  
 %     for i = 1 : num_sample
 %         [~, ind] = min( sum((generators(:, :, iter)...
 %             - repmat(sample(i, :), n_generators, 1)).^2, 2) );
@@ -114,7 +114,7 @@ for iter = 1 : iterations
 %         
 %         if d ~= 2
 %             energy(iter) = energy(iter) + weights(i) ...
-%                 * norm(generators(ind, :, iter) - sample(i, :)) ...
+%                 * norm(generators(ind, :, iter) - sample(i, :))^2 ...
 %                 / num_sample;
 %         end
 %     end
