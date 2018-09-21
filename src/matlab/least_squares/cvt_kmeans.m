@@ -1,5 +1,5 @@
 function [generators,energy, masses] = cvt_kmeans(generators0, Phi, ...
-                    num_sample, sample_type, iterations, adaptive)
+                    num_sample, sample_type, iterations, adaptive, save_name)
 %% cvt_kmeans constructs an approximate CVT of the Christoffel function 
 %
 % Creates an approximation of to a CVT of the Christoffel funtion on the
@@ -36,10 +36,10 @@ function [generators,energy, masses] = cvt_kmeans(generators0, Phi, ...
 % masses, REAL (n, iterations), the mass of each k-means cluster at each
 %  iteration
 
-[n, ~] = size(generators0);
+[n_generators, ~] = size(generators0);
 [m, d] = size(Phi.index_set);
 
-generators = zeros(n, d, iterations);
+generators = zeros(n_generators, d, iterations);
 generators(:, :, 1) = generators0;
 
 cvt_scale = (d + 2.0)/(d * 1.0);
@@ -59,7 +59,8 @@ switch sample_type
         
     case 'cvt'
         
-        % TO IMPLEMENT
+        sample = rejection_sampling_uniform(num_sample,Phi, true);        
+        weights = ones(num_sample,1);
         
     case 'uniform'
         
@@ -74,47 +75,65 @@ switch sample_type
 end
 
 energy = zeros(iterations, 1);
-masses = zeros(n, iterations);
+masses = zeros(n_generators, iterations);
 
 for iter = 1 : iterations
-    disp( ['iteration ',num2str(iter)] )
     
-    bins = zeros(n, d);
-    bin_count = zeros(n, 1);
-    
+        
     if d == 2
         [~, ~, energy(iter)]  =  vornoi_compute_mass(generators(:,:,iter), ...
             @(x) (sum(Phi.value(x).^2, 2) / m / (2^d)));
     else
         energy(iter) = 0;
     end
+
+    [k, dist] = dsearchn(generators(:,:,iter), sample);
+    bins = zeros(n_generators, d);
+    bin_count = zeros(n_generators, 1);
     
-    
-    for i = 1 : num_sample
-        [~, ind] = min( sum((generators(:, :, iter)...
-            - repmat(sample(i, :), n, 1)).^2, 2) );
-        bins(ind,:) = bins(ind,:) + sample(i, :) * weights(i);
-        bin_count(ind) = bin_count(ind) + weights(i);
+    for i = 1 : n_generators
+        bins(i,:) = sum(bsxfun(@times, sample(find(k == i),:), weights(find(k==i))),1);
+        bin_count(i) = sum(weights(find(k==i)));
         
-        masses(ind, iter) = masses(ind, iter) + Pweight(sample(i, :)) ...
-            / num_sample;
+        masses(i, iter) = sum(Pweight(sample(find(k == i),:)))/ num_sample;
         
         if d ~= 2
-            energy(iter) = energy(iter) + weights(i) ...
-                * norm(generators(ind, :, iter) - sample(i, :)) ...
-                / num_sample;
+            energy(iter) = energy(iter) + sum(weights(find(k == i)) .* ...
+                dist(find(k == i)).^2) / num_sample;
         end
     end
+%   
+%     for i = 1 : num_sample
+%         [~, ind] = min( sum((generators(:, :, iter)...
+%             - repmat(sample(i, :), n_generators, 1)).^2, 2) );
+%         bins(ind,:) = bins(ind,:) + sample(i, :) * weights(i);
+%         bin_count(ind) = bin_count(ind) + weights(i);
+%         
+%         masses(ind, iter) = masses(ind, iter) + Pweight(sample(i, :)) ...
+%             / num_sample;
+%         
+%         if d ~= 2
+%             energy(iter) = energy(iter) + weights(i) ...
+%                 * norm(generators(ind, :, iter) - sample(i, :)) ...
+%                 / num_sample;
+%         end
+%     end
     
-    for j = 1 : n
+    disp( ['iteration ',num2str(iter), ' energy: ', num2str(energy(iter))] )
+    
+    for j = 1 : n_generators
        if bin_count(j) ~= 0
            generators(j,:,iter + 1) = bins(j,:) ./ bin_count(j);
        end
     end
     
+    if ~isempty(save_name)
+       save(save_name, 'generators', 'energy'); 
+    end
+    
     % if energy change is small, double number of sample points
     if adaptive && iter > 5 ...
-            && abs((energy(iter) - energy(iter - 1))/energy(iter)) < 1e-6
+            && abs((energy(iter) - energy(iter - 1))/energy(iter)) < 1e-4 && num_sample < 5e6
         
         disp(['Doubling sample points to ', num2str(2* num_sample)]);
         
