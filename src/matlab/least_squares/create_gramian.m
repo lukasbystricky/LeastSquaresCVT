@@ -1,4 +1,4 @@
-function [ G ] = create_gramian( gens, Phi )
+function [ G ] = create_gramian( gens, Phi, areas )
 %% create_gramian creates an approximate Gramian matrix
 %
 % Creates an approximation to the Gramian matrix needed to approximate a
@@ -35,7 +35,11 @@ for i=1:d
 end
 
 for i=1:n
-    ws(i) = m/Pweight(gens(i,:))/n;
+    if ~isempty(areas)
+        ws(i) = areas(i) / 2^d;
+    else
+        ws(i) = m/Pweight(gens(i,:))/n;
+    end    
 end
 
 G = zeros(m, m);
