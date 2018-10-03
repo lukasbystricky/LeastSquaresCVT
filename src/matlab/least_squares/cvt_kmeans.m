@@ -77,7 +77,7 @@ areas = zeros(n_generators, iterations);
 
 for iter = 1 : iterations
     
-    
+    % in 2d, compute energy and areas using high-order quadrature
     if d == 2
         [~, ~, energy(iter), areas(:,iter)]  =  vornoi_compute_mass(generators(:,:,iter), ...
             @(x) (sum(Phi.value(x).^2, 2) / m / (2^d)));
@@ -85,10 +85,12 @@ for iter = 1 : iterations
         energy(iter) = 0;
     end
     
+    % find distances and closest generators for all sample points
     [k, dist] = dsearchn(generators(:,:,iter), sample);
     bins = zeros(n_generators, d);
     bin_count = zeros(n_generators, 1);
     
+    % compute mass and area for each region, as well as the energy
     for i = 1 : n_generators        
         
         bins(i,:) = sum(bsxfun(@times, sample(k == i,:), weights(k == i)),1);
@@ -101,11 +103,11 @@ for iter = 1 : iterations
                     dist(k == i).^2) / num_sample;
             areas(i, iter) = 2^d * length(weights(k == i))/ num_sample; % only if sample points are uniformly distributed
         end
-    end
-    
+    end    
 
     disp( ['iteration ',num2str(iter), ' energy: ', num2str(energy(iter))] )
     
+    % move generators to the center of mass of its region
     for j = 1 : n_generators
         if bin_count(j) ~= 0
             generators(j,:,iter + 1) = bins(j,:)./ bin_count(j);
