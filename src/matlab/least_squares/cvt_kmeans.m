@@ -1,5 +1,6 @@
-function [generators,energy, masses] = cvt_kmeans(generators0, Phi, ...
-                    num_sample, sample_type, iterations, adaptive, save_name)
+function [generators,energy, masses, areas] = cvt_kmeans(generators0, Phi, ...
+                    num_sample, sample_type, iterations, ...
+                    adaptive, save_name)
 %% cvt_kmeans constructs an approximate CVT of the Christoffel function 
 %
 % Creates an approximation of to a CVT of the Christoffel funtion on the
@@ -59,76 +60,60 @@ switch sample_type
         
     case 'cvt'
         
-        sample = rejection_sampling_uniform(num_sample,Phi, true);        
+        sample = rejection_sampling_uniform(num_sample, Phi, true);
         weights = ones(num_sample,1);
         
     case 'uniform'
         
-        sample = zeros(num_sample, d);
-        for k = 1 : d
-            sample(:, k) = 2 * rand(num_sample, 1) - 1;
-        end
-        
+        sample = 2 * rand(num_sample, d) - 1;
         for i = 1 : num_sample
-           weights(i) = Pweight(sample(i,:)).^cvt_scale;
+            weights(i) = Pweight(sample(i,:)).^cvt_scale;
         end
 end
 
 energy = zeros(iterations, 1);
 masses = zeros(n_generators, iterations);
+areas = zeros(n_generators, iterations);
 
 for iter = 1 : iterations
     
-        
+    
     if d == 2
-        [~, ~, energy(iter)]  =  vornoi_compute_mass(generators(:,:,iter), ...
+        [~, ~, energy(iter), areas(:,iter)]  =  vornoi_compute_mass(generators(:,:,iter), ...
             @(x) (sum(Phi.value(x).^2, 2) / m / (2^d)));
     else
         energy(iter) = 0;
     end
-
-   [k, dist] = dsearchn(generators(:,:,iter), sample);
+    
+    [k, dist] = dsearchn(generators(:,:,iter), sample);
     bins = zeros(n_generators, d);
     bin_count = zeros(n_generators, 1);
     
-    for i = 1 : n_generators
+    for i = 1 : n_generators        
+        
         bins(i,:) = sum(bsxfun(@times, sample(k == i,:), weights(k == i)),1);
         bin_count(i) = sum(weights(k == i));
         
-        masses(i, iter) = sum(Pweight(sample(k == i,:)))/ num_sample;
+        masses(i, iter) = sum(Pweight(sample(k == i,:)))/ num_sample;       
         
         if d ~= 2
             energy(iter) = energy(iter) + sum(weights(k == i) .* ...
-                dist(k == i).^2) / num_sample;
+                    dist(k == i).^2) / num_sample;
+            areas(i, iter) = 2^d * length(weights(k == i))/ num_sample; % only if sample points are uniformly distributed
         end
     end
-  
-%     for i = 1 : num_sample
-%         [~, ind] = min( sum((generators(:, :, iter)...
-%             - repmat(sample(i, :), n_generators, 1)).^2, 2) );
-%         bins(ind,:) = bins(ind,:) + sample(i, :) * weights(i);
-%         bin_count(ind) = bin_count(ind) + weights(i);
-%         
-%         masses(ind, iter) = masses(ind, iter) + Pweight(sample(i, :)) ...
-%             / num_sample;
-%         
-%         if d ~= 2
-%             energy(iter) = energy(iter) + weights(i) ...
-%                 * norm(generators(ind, :, iter) - sample(i, :))^2 ...
-%                 / num_sample;
-%         end
-%     end
     
+
     disp( ['iteration ',num2str(iter), ' energy: ', num2str(energy(iter))] )
     
     for j = 1 : n_generators
-       if bin_count(j) ~= 0
-           generators(j,:,iter + 1) = bins(j,:) ./ bin_count(j);
-       end
+        if bin_count(j) ~= 0
+            generators(j,:,iter + 1) = bins(j,:)./ bin_count(j);
+        end
     end
     
     if ~isempty(save_name)
-       save(save_name, 'generators', 'energy'); 
+        save(save_name, 'generators', 'energy');
     end
     
     % if energy change is small, double number of sample points
@@ -137,7 +122,7 @@ for iter = 1 : iterations
         
         disp(['Doubling sample points to ', num2str(2* num_sample)]);
         
-        sample = [sample; zeros(num_sample, d)];
+        sample = [sample; 2*rand(num_sample, d) - 1];
         weights = [weights; zeros(num_sample, 1)];
         
         switch sample_type
@@ -145,11 +130,11 @@ for iter = 1 : iterations
                 
                 % TO FIX, THIS FUNCTION IS FAR TOO SLOW
                 sample(num_sample + 1 : end) ...
-                            = sequential_sampling_uniform(num_sample,Phi);
+                    = sequential_sampling_uniform(num_sample,Phi);
                 
                 for i = num_sample + 1 : 2 * num_sample
                     weights(i) = ( Pweight(sample(i,:)) ...
-                                / (2^d)).^(cvt_scale - 1);
+                        / (2^d)).^(cvt_scale - 1);
                 end
                 
             case 'cvt'
@@ -157,11 +142,6 @@ for iter = 1 : iterations
                 % TO IMPLEMENT
                 
             case 'uniform'
-                
-                for k = 1 : d
-                    sample(num_sample + 1 : end, k) = 2 * ...
-                                rand(num_sample, 1) - 1;
-                end
                 
                 for i = num_sample + 1 : 2 * num_sample
                     weights(i) = Pweight(sample(i,:)).^cvt_scale;
